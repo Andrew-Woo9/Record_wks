@@ -12,7 +12,6 @@ https://docs.djangoproject.com/en/1.10/ref/settings/
 import json
 import os
 
-
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
@@ -25,7 +24,6 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # 루트 패스 설정
 ROOT_DIR = os.path.dirname(BASE_DIR)
 
-
 # json 설정값 read
 CONF_SECRET_DIR = os.path.join(ROOT_DIR, '.conf-secret')
 
@@ -35,25 +33,19 @@ CONF_LOCAL_FILE = os.path.join(CONF_SECRET_DIR, 'settings_local.json')
 config_common = json.loads(open(CONF_COMMON_FILE).read())
 config = json.loads(open(CONF_LOCAL_FILE).read())
 
-
 for key, key_dict in config_common.items():
     if not config.get(key):
         config[key] = {}
     for inner_key, inner_key_dict in key_dict.items():
         config[key][inner_key] = inner_key_dict
 
-
 # TEMPLATES
 TEMPLATES_DIR = os.path.join(BASE_DIR, 'templates')
-
-
-
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = config['django']['secret-key']
 
 ALLOWED_HOSTS = config['django']['allowed_hosts']
-
 
 # Application definition
 
@@ -69,6 +61,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework.authtoken',
     'rest_auth',
+    'social_django',
 ]
 
 MIDDLEWARE = [
@@ -79,6 +72,8 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+
+    'social_django.middleware.SocialAuthExceptionMiddleware',
 ]
 
 ROOT_URLCONF = 'record.urls'
@@ -96,13 +91,15 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+
+                'social_django.context_processors.backends',  # <--
+                'social_django.context_processors.login_redirect', # <--
             ],
         },
     },
 ]
 
 WSGI_APPLICATION = 'record.wsgi.application'
-
 
 # Database
 # https://docs.djangoproject.com/en/1.10/ref/settings/#databases
@@ -114,9 +111,42 @@ DATABASES = {
     }
 }
 
-
 # Password validation
 # https://docs.djangoproject.com/en/1.10/ref/settings/#auth-password-validators
+
+
+SOCIAL_AUTH_PIPELINE = (
+    'social.pipeline.social_auth.social_details',
+    'social.pipeline.social_auth.social_uid',
+    'social.pipeline.social_auth.auth_allowed',
+    'social.pipeline.social_auth.associate_by_email',
+    'social.pipeline.social_auth.social_user',
+    'social.pipeline.user.get_username',
+    'social.pipeline.user.create_user',
+    'social.pipeline.social_auth.associate_user',
+    'social.pipeline.social_auth.load_extra_data',
+    'social.pipeline.user.user_details'
+)
+
+AUTHENTICATION_BACKENDS = (
+    'social_core.backends.google.GoogleOAuth2',
+    'social.backends.facebook.FacebookOAuth2',
+    'django.contrib.auth.backends.ModelBackend',
+)
+
+SOCIAL_AUTH_FACEBOOK_KEY = config['facebookOAuth']['app-id']
+SOCIAL_AUTH_FACEBOOK_SECRET = config['facebookOAuth']['app-secret']
+
+SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = config['GoogleOAuth2']['client-id']
+SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = config['GoogleOAuth2']['client-key']
+# SOCIAL_AUTH_GOOGLE_OAUTH2_SCOPE = ['email']
+
+SOCIAL_AUTH_URL_NAMESPACE = 'social'
+
+# 로그인 리 다이렉트를 설정하지 않으면 accounts/profile 이 기본값으로 되어있음
+LOGIN_REDIRECT_URL = '/'
+
+
 AUTH_USER_MODEL = 'member.MyUser'
 AUTH_PASSWORD_VALIDATORS = [
     {
@@ -133,7 +163,6 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
 # Internationalization
 # https://docs.djangoproject.com/en/1.10/topics/i18n/
 
@@ -146,7 +175,6 @@ USE_I18N = True
 USE_L10N = True
 
 USE_TZ = True
-
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.10/howto/static-files/

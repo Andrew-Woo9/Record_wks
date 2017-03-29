@@ -1,3 +1,13 @@
-from django.shortcuts import render
+from django.shortcuts import render, render_to_response
+from django.template import RequestContext
 
-# Create your views here.
+
+def home(request):
+    context = RequestContext(
+        request, {
+            'request': request,
+            'user': request.user
+        }
+    )
+    return render_to_response('member/home.html', context=context)
+

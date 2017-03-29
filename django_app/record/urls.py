@@ -16,7 +16,14 @@ Including another URLconf
 from django.conf.urls import url, include
 from django.contrib import admin
 
+from member import views
+
+admin.autodiscover()
+
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
-    url(r'^rest-auth/', include('rest_auth.urls'))
+    url(r'^rest-auth/', include('rest_auth.urls')),
+    url(r'^soc/', include('social_django.urls', namespace='social')),
+    url('', include('django.contrib.auth.urls', namespace='auth')),
+    url(r'^$', views.home, name='home'),
 ]
